@@ -6,9 +6,11 @@ use crate::tossable::{Coin, Tossable};
 
 #[derive(Parser)]
 struct Args {
+    /// number of times you want to toss that item
     #[arg(default_value_t=1, value_parser=clap::value_parser!(u64).range(1..))]
     number: u64,
 
+    /// the item you want to toss
     #[command(subcommand)]
     tossable: TossOptions,
 }
