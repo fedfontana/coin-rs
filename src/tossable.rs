@@ -68,3 +68,23 @@ impl Tossable for Dice {
         rng.gen_range(self.min..=self.max)
     }
 }
+
+pub struct Chooser {
+    options: Vec<String>,
+}
+
+impl Chooser {
+    pub fn new(options: Vec<String>) -> Self {
+        Self { options }
+    }
+}
+
+impl Tossable for Chooser {
+    type Outcome = String;
+
+    fn toss(&self) -> Self::Outcome {
+        let mut rng = rand::thread_rng();
+        let idx = rng.gen_range(0..self.options.len());
+        self.options[idx].clone()
+    }
+}

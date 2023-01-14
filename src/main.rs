@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use clap::{Parser, Subcommand};
-use tossable::Dice;
+use tossable::{Chooser, Dice};
 
 mod tossable;
 use crate::tossable::{Coin, Tossable};
@@ -33,11 +35,17 @@ enum TossOptions {
         #[arg(short='M', long, default_value_t=6, value_parser=clap::value_parser!(u64).range(1..))]
         max: u64,
     },
+    Choose {
+        #[arg(num_args=2..)]
+        choices: Vec<String>,
+    },
 }
 
 impl Default for TossOptions {
     fn default() -> Self {
-        Self::Coin { heads_probability: 50 }
+        Self::Coin {
+            heads_probability: 50,
+        }
     }
 }
 
@@ -99,6 +107,34 @@ fn main() -> Result<(), &'static str> {
                     println!(
                         "Got {} {count} time{}",
                         idx + 1,
+                        if *count != 1 { "s" } else { "" }
+                    )
+                }
+            }
+        }
+        TossOptions::Choose { choices } => {
+            let chooser= Chooser::new(choices);
+            if args.number == 1 {
+                let res = chooser.toss();
+                println!("Got {res}");
+            } else {
+                let res = chooser.toss_many(args.number);
+
+                let mut counts = HashMap::<&str, u64>::new();
+                for r in res.iter() {
+                    counts.entry(r).and_modify(|e| { *e += 1; }).or_insert(1);
+                }
+
+                if args.print {
+                    println!(
+                        "Results: {}",
+                        res.join(", ")
+                    );
+                }
+
+                for (item, count) in counts.iter() {
+                    println!(
+                        "Got {item} {count} time{}",
                         if *count != 1 { "s" } else { "" }
                     )
                 }

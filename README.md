@@ -30,4 +30,9 @@ Which is equivalent to
 toss 1 dice -m 1 -M 6
 ```
 
+If you want to let the program choose between two or more options run
+```
+toss 10 choose option1 option2 ...
+```
+
 For more information about the options provided, please run `toss --help` and `toss <coin | dice> --help`
