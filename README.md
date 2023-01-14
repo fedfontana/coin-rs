@@ -35,4 +35,4 @@ If you want to let the program choose between two or more options run
 toss 10 choose option1 option2 ...
 ```
 
-For more information about the options provided, please run `toss --help` and `toss <coin | dice> --help`
+For more information about the options provided, please run `toss --help` and `toss <coin | dice | choose> --help`
