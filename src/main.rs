@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use clap::{Parser, Subcommand};
-use tossable::{Chooser, Dice};
+use tossable::{Chooser, Dice, Extractor};
 
 mod tossable;
 use crate::tossable::{Coin, Tossable};
@@ -28,6 +28,7 @@ enum TossOptions {
         #[arg(short='p', long, default_value_t=50, value_parser=clap::value_parser!(u64).range(0..=100))]
         heads_probability: u64,
     },
+
     Dice {
         #[arg(short, long, default_value_t=1, value_parser=clap::value_parser!(u64).range(1..))]
         min: u64,
@@ -35,7 +36,15 @@ enum TossOptions {
         #[arg(short='M', long, default_value_t=6, value_parser=clap::value_parser!(u64).range(1..))]
         max: u64,
     },
+
+    /// Extract with replacement
     Choose {
+        #[arg(num_args=2..)]
+        choices: Vec<String>,
+    },
+
+    /// Extract without replacement
+    Extract {
         #[arg(num_args=2..)]
         choices: Vec<String>,
     },
@@ -54,7 +63,7 @@ fn main() -> Result<(), &'static str> {
 
     match args.tossable.unwrap_or_default() {
         TossOptions::Coin { heads_probability } => {
-            let coin = Coin::new(heads_probability);
+            let mut coin = Coin::new(heads_probability);
             if args.number == 1 {
                 let res = coin.toss();
                 println!("Got {}", res.as_ref());
@@ -81,7 +90,7 @@ fn main() -> Result<(), &'static str> {
             }
         }
         TossOptions::Dice { min, max } => {
-            let dice = Dice::new(min, max)?;
+            let mut dice = Dice::new(min, max)?;
             if args.number == 1 {
                 let res = dice.toss();
                 println!("Got {res}");
@@ -113,7 +122,7 @@ fn main() -> Result<(), &'static str> {
             }
         }
         TossOptions::Choose { choices } => {
-            let chooser= Chooser::new(choices);
+            let mut chooser = Chooser::new(choices);
             if args.number == 1 {
                 let res = chooser.toss();
                 println!("Got {res}");
@@ -122,14 +131,16 @@ fn main() -> Result<(), &'static str> {
 
                 let mut counts = HashMap::<&str, u64>::new();
                 for r in res.iter() {
-                    counts.entry(r).and_modify(|e| { *e += 1; }).or_insert(1);
+                    counts
+                        .entry(r)
+                        .and_modify(|e| {
+                            *e += 1;
+                        })
+                        .or_insert(1);
                 }
 
                 if args.print {
-                    println!(
-                        "Results: {}",
-                        res.join(", ")
-                    );
+                    println!("Results: {}", res.join(", "));
                 }
 
                 for (item, count) in counts.iter() {
@@ -138,6 +149,20 @@ fn main() -> Result<(), &'static str> {
                         if *count != 1 { "s" } else { "" }
                     )
                 }
+            }
+        }
+        TossOptions::Extract { choices } => {
+            if args.number as usize >= choices.len() {
+                return Err("`count` must be smaller than the amount of choices.");
+            }
+
+            let mut extractor = Extractor::new(choices);
+            if args.number == 1 {
+                let res = extractor.toss();
+                println!("Got {res}");
+            } else {
+                let res = extractor.toss_many(args.number);
+                println!("Got {}", res.join(", "));
             }
         }
     }

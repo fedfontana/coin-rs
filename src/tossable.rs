@@ -2,8 +2,8 @@ use rand::Rng;
 
 pub trait Tossable {
     type Outcome;
-    fn toss(&self) -> Self::Outcome;
-    fn toss_many(&self, n: u64) -> Vec<Self::Outcome> {
+    fn toss(&mut self) -> Self::Outcome;
+    fn toss_many(&mut self, n: u64) -> Vec<Self::Outcome> {
         (0..n).map(|_idx| self.toss()).collect()
     }
 }
@@ -35,7 +35,7 @@ impl Coin {
 impl Tossable for Coin {
     type Outcome = CoinFace;
 
-    fn toss(&self) -> Self::Outcome {
+    fn toss(&mut self) -> Self::Outcome {
         let mut rng = rand::thread_rng();
         let outcome = rng.gen_range(0..100);
         if outcome < self.heads_probability {
@@ -63,7 +63,7 @@ impl Dice {
 impl Tossable for Dice {
     type Outcome = u64;
 
-    fn toss(&self) -> Self::Outcome {
+    fn toss(&mut self) -> Self::Outcome {
         let mut rng = rand::thread_rng();
         rng.gen_range(self.min..=self.max)
     }
@@ -82,9 +82,30 @@ impl Chooser {
 impl Tossable for Chooser {
     type Outcome = String;
 
-    fn toss(&self) -> Self::Outcome {
+    fn toss(&mut self) -> Self::Outcome {
         let mut rng = rand::thread_rng();
         let idx = rng.gen_range(0..self.options.len());
         self.options[idx].clone()
+    }
+}
+
+
+pub struct Extractor {
+    options: Vec<String>,
+}
+
+impl Extractor {
+    pub fn new(options: Vec<String>) -> Self {
+        Self { options }
+    }
+}
+
+impl Tossable for Extractor {
+    type Outcome = String;
+
+    fn toss(&mut self) -> Self::Outcome {
+        let mut rng = rand::thread_rng();
+        let idx = rng.gen_range(0..self.options.len());
+        self.options.swap_remove(idx)
     }
 }
